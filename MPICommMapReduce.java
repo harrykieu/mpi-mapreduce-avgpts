@@ -3,10 +3,11 @@ import java.io.FileReader;
 import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
+
+import MapReduceImpl.*;
+
 import java.util.ArrayList;
 import java.util.HashMap;
-
-//import MapReduceAverage.*;
 
 import mpi.*;
 
@@ -37,6 +38,7 @@ class MPICommMapReduce {
                         datasrc.add((map.get(tok[0])) * 100 + Float.parseFloat(tok[1]));
                     }
                 }
+                System.out.println("[!] Process rank 0 read from input successfully!");
             } catch (Exception e) {
                 System.out.println(e.toString());
                 System.exit(1);
@@ -48,7 +50,6 @@ class MPICommMapReduce {
                     datasrc.add((float) 0);
                 }
             }
-            System.out.println(datasrc.size());
             flatArray = new float[datasrc.size()];
             for (int i = 0; i < datasrc.size(); i++) {
                 flatArray[i] = datasrc.get(i);
@@ -65,30 +66,48 @@ class MPICommMapReduce {
         MPI.COMM_WORLD.scatter(flatArray, dataSizePerProcess, MPI.FLOAT, recv, dataSizePerProcess, MPI.FLOAT, 0);
         MPI.COMM_WORLD.barrier();
 
-        // map-reduce implementation here
+        // MR phase 1
+        System.out.println("[!] Process rank " + rank + " enter MapReduce phase 1...");
+        Map<Integer, List<Float>> listMap = MapReduce.mapPhase1(recv);
+        float[] result = MapReduce.reducePhase1(listMap);
 
         float[] gather = new float[totalDataSize];
-        MPI.COMM_WORLD.gather(recv, dataSizePerProcess, MPI.FLOAT, gather, dataSizePerProcess, MPI.FLOAT, 0);
+        MPI.COMM_WORLD.gather(result, 4, MPI.FLOAT, gather,
+                4, MPI.FLOAT, 0);
+
         if (rank == 0) {
+            // MR phase 2
+            System.out.println("[!] Process rank 0 enter MapReduce phase 2...");
+            Map<Integer, List<Map<Integer, Float>>> listMap2 = MapReduce.mapPhase2(gather);
+            // debug
+            // for (Map.Entry<Integer, List<Map<Integer, Float>>> entry :
+            // listMap2.entrySet()) {
+            // System.out.println("Subject ID: " + entry.getKey());
+            // List<Map<Integer, Float>> innerList = entry.getValue();
+            // for (Map<Integer, Float> innerMap : innerList) {
+            // for (Map.Entry<Integer, Float> innerEntry : innerMap.entrySet()) {
+            // System.out.println(" Count: " + innerEntry.getKey() + ", Pts: " +
+            // innerEntry.getValue());
+            // }
+            // }
+            // }
+
+            float[] result2 = MapReduce.reducePhase2(listMap2);
+
             try {
-                for (int i = 0; i < gather.length; i++)
-                // separate first digit with remaining
-                {
-                    int subjectID = Character.getNumericValue(String.valueOf(gather[i]).charAt(0));
-                    float remaining = Float.parseFloat(String.valueOf(gather[i]).substring(1));
-                    if (remaining == 0) {
-                        continue;
-                    }
+                System.out.println("[!] Done! Average of subjects:");
+                for (float subjectPts : result2) {
+                    int subjectID = Character.getNumericValue(String.valueOf(subjectPts).charAt(0));
+                    float pts = Float.parseFloat(String.valueOf(subjectPts).substring(1));
                     String subject = null;
-                    // remap
+                    // get subject name from subjectId
                     for (Map.Entry<String, Integer> entry : map.entrySet()) {
                         if (entry.getValue().equals(subjectID)) {
                             subject = entry.getKey();
                             break;
                         }
                     }
-                    // debug
-                    System.out.println(subject + "---" + remaining);
+                    System.out.println("\t" + subject + ":" + pts);
                 }
             } catch (Exception e) {
                 System.out.println(e);

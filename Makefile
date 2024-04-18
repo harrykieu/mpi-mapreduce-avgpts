@@ -1,18 +1,18 @@
 # Variables
-CLASSPATH=/usr/local/lib/mpi.jar
+CLASSPATH=/usr/local/lib/mpi.jar:.
 JAVA_FILE=MPICommMapReduce.java
+MAP_REDUCE_FILE=./MapReduceImpl/MapReduce.java
 OUT_FILE=MPICommMapReduce
 
-# Default target
 all: compile run
 
-# Compile the Java file
 compile:
-	mpijavac -cp $(CLASSPATH) $(JAVA_FILE)
+	javac $(MAP_REDUCE_FILE)
+	javac -cp $(CLASSPATH) $(JAVA_FILE)
 
 # Run the program
 run:
-	mpirun -n 4 java -cp $(CLASSPATH) $(OUT_FILE)
+	mpirun -n 4 java $(OUT_FILE)
 
 # Clean up
 clean:
