@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import MapReduceImpl.*;
 
@@ -43,7 +44,7 @@ class MPICommMapReduce {
                 System.out.println(e.toString());
                 System.exit(1);
             }
-            int no_padding = datasrc.size() % proc - 1;
+            int no_padding = datasrc.size() % proc;
             if (no_padding != 0) {
                 // Fill the remaining space with 0
                 for (int i = 0; i < (proc - no_padding); i++) {
@@ -61,7 +62,6 @@ class MPICommMapReduce {
 
         int totalDataSize = datasrcLengthBuffer.get(0);
         int dataSizePerProcess = Math.round(totalDataSize / proc); // Size of data each process receives
-
         float[] recv = new float[dataSizePerProcess];
         MPI.COMM_WORLD.scatter(flatArray, dataSizePerProcess, MPI.FLOAT, recv, dataSizePerProcess, MPI.FLOAT, 0);
         MPI.COMM_WORLD.barrier();
@@ -71,26 +71,25 @@ class MPICommMapReduce {
         Map<Integer, List<Float>> listMap = MapReduce.mapPhase1(recv);
         float[] result = MapReduce.reducePhase1(listMap);
 
-        float[] gather = new float[totalDataSize];
-        MPI.COMM_WORLD.gather(result, 4, MPI.FLOAT, gather,
-                4, MPI.FLOAT, 0);
+        float[] gather = new float[(int) (map.size() * 3 * proc)];
+        MPI.COMM_WORLD.gather(result, (int) (map.size() * 3), MPI.FLOAT, gather,
+                (int) (map.size() * 3), MPI.FLOAT, 0);
 
         if (rank == 0) {
             // MR phase 2
             System.out.println("[!] Process rank 0 enter MapReduce phase 2...");
             Map<Integer, List<Map<Integer, Float>>> listMap2 = MapReduce.mapPhase2(gather);
             // debug
-            // for (Map.Entry<Integer, List<Map<Integer, Float>>> entry :
-            // listMap2.entrySet()) {
-            // System.out.println("Subject ID: " + entry.getKey());
-            // List<Map<Integer, Float>> innerList = entry.getValue();
-            // for (Map<Integer, Float> innerMap : innerList) {
-            // for (Map.Entry<Integer, Float> innerEntry : innerMap.entrySet()) {
-            // System.out.println(" Count: " + innerEntry.getKey() + ", Pts: " +
-            // innerEntry.getValue());
-            // }
-            // }
-            // }
+            for (Map.Entry<Integer, List<Map<Integer, Float>>> entry : listMap2.entrySet()) {
+                System.out.println("Subject ID: " + entry.getKey());
+                List<Map<Integer, Float>> innerList = entry.getValue();
+                for (Map<Integer, Float> innerMap : innerList) {
+                    for (Map.Entry<Integer, Float> innerEntry : innerMap.entrySet()) {
+                        System.out.println(" Count: " + innerEntry.getKey() + ", Pts: " +
+                                innerEntry.getValue());
+                    }
+                }
+            }
 
             float[] result2 = MapReduce.reducePhase2(listMap2);
 

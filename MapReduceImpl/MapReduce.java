@@ -36,13 +36,8 @@ public class MapReduce {
 
     }
 
-    /**
-     * @param input
-     * @return float[]
-     */
     public static float[] reducePhase1(Map<Integer, List<Float>> input) {
         List<Float> outputList = new ArrayList<>();
-        DecimalFormat df = new DecimalFormat("#.##"); // Format to two decimal places
 
         for (int subjectId = 1; subjectId <= 4; subjectId++) {
             List<Float> pointsList = input.getOrDefault(subjectId, new ArrayList<>());
@@ -54,9 +49,10 @@ public class MapReduce {
 
             int totalCount = pointsList.size();
 
-            // Format the average with subjectId and add to outputList
-            String pts = String.valueOf(subjectId) + String.valueOf(totalCount) + df.format(totalPoints);
-            outputList.add(Float.parseFloat(pts));
+            // Add subjectId, totalCount, and totalPoints to the outputList
+            outputList.add((float) subjectId);
+            outputList.add((float) totalCount);
+            outputList.add(totalPoints);
         }
 
         // Convert List<Float> to float[]
@@ -68,21 +64,14 @@ public class MapReduce {
         return output;
     }
 
-    /**
-     * @param MpiInput
-     * @return Map<Integer, List<Map<Integer, Float>>>
-     */
     public static Map<Integer, List<Map<Integer, Float>>> mapPhase2(float[] MpiInput) {
         Map<Integer, List<Map<Integer, Float>>> InputList = new HashMap<>();
-        for (float i : MpiInput) {
-            if (i == 0.0) {
-                continue;
-            }
-            String medium = String.valueOf(i);
-            // Extract the id and points from tokens
-            int subjectId = Integer.parseInt(medium.substring(0, 1));
-            int count = Integer.parseInt(medium.substring(1, 2));
-            float pts = Float.parseFloat(medium.substring(2));
+
+        // Iterate through the input array by increments of 3
+        for (int i = 0; i < MpiInput.length - 2; i += 3) {
+            int subjectId = (int) MpiInput[i];
+            int totalCount = (int) MpiInput[i + 1];
+            float totalPoints = MpiInput[i + 2];
 
             // Check if the subject ID already exists in the output map
             if (!InputList.containsKey(subjectId)) {
@@ -91,10 +80,9 @@ public class MapReduce {
             }
 
             // Add the points to the list associated with the subject ID
-            InputList.get(subjectId).add(Map.of(count, pts));
+            InputList.get(subjectId).add(Map.of(totalCount, totalPoints));
         }
-        return InputList; // Added return statement
-
+        return InputList;
     }
 
     public static float[] reducePhase2(Map<Integer, List<Map<Integer, Float>>> input) {
