@@ -1,0 +1,37 @@
+version: "3"
+
+services:
+  mpi_node1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - mpi_network
+    command: ["/bin/bash", "/dockerentrypoint.sh"]
+    volumes:
+      - ./dockerentrypoint.sh:/dockerentrypoint.sh
+  mpi_node2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - mpi_network
+    command: tail -f /dev/null
+  mpi_node3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - mpi_network
+    command: tail -f /dev/null
+  mpi_node4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - mpi_network
+    command: tail -f /dev/null
+
+networks:
+  mpi_network:
+    driver: bridge
