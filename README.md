@@ -9,7 +9,9 @@
 # System Architecture
 
 Our system will use 5 Docker containers to connect and communicate via a Docker network. Each container uses MPI to communicate in the network and uses the `MapReduce` model to achieve the goal: calculate the average point of each different subject from a large amount of input.  
-![System Architecture](img/arch.png)
+
+![System Architecture](img/arch.png)  
+
 In this context, the `MapReduce` task would be distributed across the Docker containers, with each handling a portion of the data processing, and the MPI processes within the containers would communicate with each other to do the `MapReduce` tasks, ensuring that data is correctly processed and aggregated.
 
 # Algorithms
