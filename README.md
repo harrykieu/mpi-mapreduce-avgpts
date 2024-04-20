@@ -1,4 +1,15 @@
 # Calculate Average Points using MapReduce + MPI
+## Group Members
+
+| Student Name      | Student ID |
+| ----------------  | ---------- |
+| Kieu Huy Hai      | BI12-149   |
+| Vu Duc Hieu       | BI12-162   |
+| Bui Cong Hoang    | BI12-169   |
+| Ngo Quang Hung    | BI12-191   |
+| Pham Khuong Cuong | BI12-070   |
+| Hoang The Duy     | BI12-129   |
+
 ## Installation and Run
 
 - Install `openjdk-17-jre` and `openjdk-17-jdk` using `apt`: `sudo apt-get install openjdk-17-jre openjdk-17-jdk -y`
