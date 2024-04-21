@@ -10,28 +10,41 @@ services:
     command: ["/bin/bash", "/dockerentrypoint.sh"]
     volumes:
       - ./dockerentrypoint.sh:/dockerentrypoint.sh
+      - shared_volume:/root/.ssh
   mpi_node2:
     build:
       context: .
       dockerfile: Dockerfile
     networks:
       - mpi_network
-    command: tail -f /dev/null
+    command: ["/bin/bash", "/dockerentrypoint.sh"]
+    volumes:
+      - ./entry_othernodes.sh:/dockerentrypoint.sh
+      - shared_volume:/shared
   mpi_node3:
     build:
       context: .
       dockerfile: Dockerfile
     networks:
       - mpi_network
-    command: tail -f /dev/null
+    command: ["/bin/bash", "/dockerentrypoint.sh"]
+    volumes:
+      - ./entry_othernodes.sh:/dockerentrypoint.sh
+      - shared_volume:/shared
   mpi_node4:
     build:
       context: .
       dockerfile: Dockerfile
     networks:
       - mpi_network
-    command: tail -f /dev/null
+    command: ["/bin/bash", "/dockerentrypoint.sh"]
+    volumes:
+      - ./entry_othernodes.sh:/dockerentrypoint.sh
+      - shared_volume:/shared
 
 networks:
   mpi_network:
     driver: bridge
+
+volumes:
+  shared_volume:

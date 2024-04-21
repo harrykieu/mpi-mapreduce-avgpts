@@ -12,7 +12,7 @@ compile:
 
 # Run the program
 run:
-	mpirun -n 4 --host mpi_node1,mpi_node2,mpi_node3,mpi_node4 java $(OUT_FILE)
+	mpirun -n 4 --allow-run-as-root --host localhost,mpi_node2,mpi_node3,mpi_node4 java $(OUT_FILE)
 
 # Clean up
 clean:
