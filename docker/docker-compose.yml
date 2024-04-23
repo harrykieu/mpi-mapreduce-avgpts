@@ -41,6 +41,16 @@ services:
     volumes:
       - ./entry_othernodes.sh:/dockerentrypoint.sh
       - shared_volume:/shared
+  mpi_node5:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - mpi_network
+    command: ["/bin/bash", "/dockerentrypoint.sh"]
+    volumes:
+      - ./entry_othernodes.sh:/dockerentrypoint.sh
+      - shared_volume:/shared
 
 networks:
   mpi_network:
